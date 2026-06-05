@@ -10,54 +10,35 @@ Colección de aplicaciones personalizadas. Este es el repo padre que contiene re
 
 ## 🚀 Primeros pasos
 
-### Clonar el repo padre
+### Clonar el repo padre con todos los subrepos
+Los subrepos están incluidos como **git submodules**, así que todo viene junto:
+
 ```bash
-git clone https://github.com/Pablouski7/custom-apps.git
+# Primera vez: clonar con submodules
+git clone --recurse-submodules https://github.com/Pablouski7/custom-apps.git
 cd custom-apps
 ```
 
-### Clonar todos los repos
+Si ya tienes el repo clonado sin submodules:
 ```bash
-# Opción 1: Clonar todos en subdirectorios
-git clone https://github.com/Pablouski7/agent-editor.git
-git clone https://github.com/Pablouski7/ticktick-map-app.git
-git clone https://github.com/Pablouski7/video-editor.git
-
-# Opción 2: Usar el script de clonación (ver abajo)
-bash clone-all.sh
+git submodule update --init --recursive
 ```
 
-## 📝 Scripts útiles
+## 📝 Comandos útiles
 
-### `clone-all.sh` - Clonar todos los repos
+### Actualizar todos los repos (incluido el padre)
 ```bash
-#!/bin/bash
-REPOS=(
-  "agent-editor"
-  "ticktick-map-app"
-  "video-editor"
-)
-
-for repo in "${REPOS[@]}"; do
-  echo "Clonando $repo..."
-  git clone https://github.com/Pablouski7/$repo.git
-done
-echo "✅ Todos los repos clonados"
+# Actualizar el repo padre y todos los submodules
+git pull origin main
+git submodule update --remote --merge
 ```
 
-Ejecutar:
+O de forma más completa:
 ```bash
-bash clone-all.sh
-```
+# Actualizar repo padre
+git pull origin main
 
-### Actualizar todos los repos
-```bash
-# Opción 1: Actualizar cada repo por separado
-cd agent-editor && git pull origin main && cd ..
-cd ticktick-map-app && git pull origin main && cd ..
-cd video-editor && git pull origin main && cd ..
-
-# Opción 2: Usar este script
+# Actualizar todos los submodules
 for dir in agent-editor ticktick-map-app video-editor; do
   if [ -d "$dir" ]; then
     echo "Actualizando $dir..."
@@ -101,26 +82,41 @@ done
 
 ## 📋 Flujo típico de trabajo
 
-### 1. Actualizar todos los repos
+### 1. Clonar todo (primera vez)
 ```bash
-for dir in agent-editor ticktick-map-app video-editor; do
-  [ -d "$dir" ] && cd "$dir" && git pull origin main && cd ..
-done
+git clone --recurse-submodules https://github.com/Pablouski7/custom-apps.git
+cd custom-apps
 ```
 
-### 2. Hacer cambios en un repo
+### 2. Actualizar todo
 ```bash
-cd nombre-del-repo
+git pull origin main
+git submodule update --remote --merge
+```
+
+### 3. Hacer cambios en un subrepo
+```bash
+cd nombre-del-subrepo  # agent-editor, ticktick-map-app o video-editor
 # ... hacer cambios ...
 git add .
 git commit -m "descripción de cambios"
 git push origin main
+cd ..
+
+# Actualizar el repo padre para que refleje el nuevo commit del submodule
+git add nombre-del-subrepo
+git commit -m "chore: actualizar referencia de nombre-del-subrepo"
+git push origin main
 ```
 
-### 3. Ver estado global
+### 4. Ver estado global
 ```bash
+# Estado del repo padre y submodules
+git status
+
+# Logs de todos
 for dir in agent-editor ticktick-map-app video-editor; do
-  [ -d "$dir" ] && echo "=== $dir ===" && cd "$dir" && git log --oneline -n 3 && cd ..
+  [ -d "$dir" ] && (cd "$dir" && echo "=== $dir ===" && git log --oneline -n 3)
 done
 ```
 
@@ -129,28 +125,39 @@ done
 Agrega a tu `~/.bashrc` o `~/.zshrc`:
 
 ```bash
-# Actualizar todos los repos
-alias update-all='for dir in agent-editor ticktick-map-app video-editor; do [ -d "$dir" ] && (cd "$dir" && git pull origin main && echo "✅ $dir") || true; done'
+# Actualizar todo (padre + submodules)
+alias update-all='git pull origin main && git submodule update --remote --merge && echo "✅ Todo actualizado"'
 
 # Ver estado de todos
-alias status-all='for dir in agent-editor ticktick-map-app video-editor; do [ -d "$dir" ] && echo "=== $dir ===" && (cd "$dir" && git status); done'
+alias status-all='git status && echo "" && for dir in agent-editor ticktick-map-app video-editor; do [ -d "$dir" ] && echo "=== $dir ===" && (cd "$dir" && git status); done'
 
 # Ver logs de todos
-alias log-all='for dir in agent-editor ticktick-map-app video-editor; do [ -d "$dir" ] && (cd "$dir" && echo "=== $dir ===" && git log --oneline -n 3); done'
+alias log-all='git log --oneline -n 3 && echo "" && for dir in agent-editor ticktick-map-app video-editor; do [ -d "$dir" ] && (cd "$dir" && echo "=== $dir ===" && git log --oneline -n 3); done'
 ```
 
 Luego puedes usar:
 ```bash
-update-all
-status-all
-log-all
+update-all      # Actualizar todo en un comando
+status-all      # Ver estado de todos
+log-all         # Ver logs de todos
 ```
 
 ## 📂 Estructura
 ```
 custom-apps/
+├── .gitmodules (configuración de submodules)
 ├── README.md (este archivo)
-├── agent-editor/ (repo clonado)
-├── ticktick-map-app/ (repo clonado)
-└── video-editor/ (repo clonado)
+├── agent-editor/ (submodule → repo independiente)
+├── ticktick-map-app/ (submodule → repo independiente)
+└── video-editor/ (submodule → repo independiente)
 ```
+
+### ¿Cómo funcionan los submodules?
+
+Los submodules te permiten:
+- ✅ Clonar todo junto: `git clone --recurse-submodules https://...`
+- ✅ Trabajar en cada repo de forma independiente
+- ✅ El repo padre referencia un commit específico de cada subrepo
+- ✅ Actualizar cada subrepo sin afectar el padre (a menos que lo confirmes)
+
+Para más info: https://git-scm.com/book/es/v2/Herramientas-de-Git-Submódulos
