@@ -1,0 +1,9 @@
+[submodule "agent-editor"]
+	path = agent-editor
+	url = https://github.com/Pablouski7/agent-editor.git
+[submodule "ticktick-map-app"]
+	path = ticktick-map-app
+	url = https://github.com/Pablouski7/ticktick-map-app.git
+[submodule "video-editor"]
+	path = video-editor
+	url = https://github.com/Pablouski7/video-editor.git
